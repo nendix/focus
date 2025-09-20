@@ -7,9 +7,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"pomodoro/pkg/ascii"
-	"pomodoro/pkg/audio"
-	"pomodoro/pkg/timer"
+	"focus/pkg/ascii"
+	"focus/pkg/audio"
+	"focus/pkg/timer"
 )
 
 type Model struct {

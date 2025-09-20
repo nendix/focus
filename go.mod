@@ -1,4 +1,4 @@
-module pomodoro
+module focus
 
 go 1.25.1
 

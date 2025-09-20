@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"pomodoro/pkg/ui"
+	"focus/pkg/ui"
 )
 
 func main() {
