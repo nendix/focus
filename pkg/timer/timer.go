@@ -16,8 +16,7 @@ const (
 type Status int
 
 const (
-	Stopped Status = iota
-	Running
+	Running Status = iota
 	Paused
 	Finished
 )
@@ -37,7 +36,7 @@ type Timer struct {
 func New() *Timer {
 	return &Timer{
 		Phase:        Work,
-		Status:       Stopped,
+		Status:       Paused,
 		Duration:     3 * time.Second, // 25 minutes for work
 		Remaining:    3 * time.Second,
 		SessionCount: 1,
@@ -82,7 +81,7 @@ func (t *Timer) Pause() {
 }
 
 func (t *Timer) Reset() {
-	t.Status = Stopped
+	t.Status = Paused
 	if t.ticker != nil {
 		t.ticker.Stop()
 	}
@@ -90,7 +89,7 @@ func (t *Timer) Reset() {
 }
 
 func (t *Timer) Stop() {
-	t.Status = Stopped
+	t.Status = Paused
 	if t.ticker != nil {
 		t.ticker.Stop()
 	}
@@ -126,7 +125,7 @@ func (t *Timer) nextPhase() {
 
 	t.Duration = t.getDurationForPhase(t.Phase)
 	t.Remaining = t.Duration
-	t.Status = Stopped
+	t.Status = Paused
 
 	// Auto-start the next phase
 	t.Start()
@@ -175,7 +174,7 @@ func (t *Timer) GetStatusString() string {
 	case Finished:
 		return "Finished"
 	default:
-		return "Stopped"
+		return "Paused"
 	}
 }
 

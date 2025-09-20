@@ -71,7 +71,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case " ":
 			if m.timer.Status == timer.Running {
 				m.timer.Pause()
-			} else if m.timer.Status == timer.Paused || m.timer.Status == timer.Stopped {
+			} else if m.timer.Status == timer.Paused {
 				m.timer.Start()
 			}
 		case "r":
@@ -89,7 +89,7 @@ func (m *Model) View() string {
 	// Phase info
 	phaseColor := lipgloss.Color("2")
 	if m.timer.Phase == timer.Work {
-		phaseColor = lipgloss.Color("1")
+		phaseColor = lipgloss.Color("4")
 	}
 
 	phaseText := lipgloss.NewStyle().
@@ -97,31 +97,25 @@ func (m *Model) View() string {
 		Bold(true).
 		Render(fmt.Sprintf("%s (%d/4)", m.timer.GetPhaseString(), m.timer.SessionCount))
 
-	// Time display (ASCII art)
+	// Time display (ASCII art) - color based on status
 	timeStr := m.timer.FormatTime()
 	asciiTime := ascii.ToASCII(timeStr)
 
+	// Timer color based on status: running=yellow, paused=gray
+	timerColor := lipgloss.Color("8") // Default gray
+	switch m.timer.Status {
+	case timer.Running:
+		timerColor = lipgloss.Color("3") // Yellow
+	case timer.Paused:
+		timerColor = lipgloss.Color("8") // Gray
+	}
+
 	timeText := lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("3")).
+		Foreground(timerColor).
 		Align(lipgloss.Center).
 		Padding(1, 2).
 		Render(asciiTime)
-
-	// Status
-	statusColor := lipgloss.Color("8")
-	switch m.timer.Status {
-	case timer.Running:
-		statusColor = lipgloss.Color("2")
-	case timer.Paused:
-		statusColor = lipgloss.Color("3")
-	case timer.Finished:
-		statusColor = lipgloss.Color("5")
-	}
-
-	statusText := lipgloss.NewStyle().
-		Foreground(statusColor).
-		Render(fmt.Sprintf("%s", m.timer.GetStatusString()))
 
 	// Controls
 	controls := lipgloss.NewStyle().
@@ -135,7 +129,6 @@ func (m *Model) View() string {
 		phaseText,
 		"",
 		timeText,
-		statusText,
 		"",
 		controls,
 	)
@@ -146,7 +139,7 @@ func (m *Model) View() string {
 		lipgloss.Center, lipgloss.Center,
 		lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("5")).
+			BorderForeground(lipgloss.Color("7")).
 			Padding(1, 2).
 			Render(content),
 	)
