@@ -13,10 +13,15 @@ import (
 )
 
 type Model struct {
-	timer  *timer.Timer
-	audio  *audio.Player
-	width  int
-	height int
+	timer        *timer.Timer
+	audio        *audio.Player
+	width        int
+	height       int
+	editMode     bool
+	editPhase    timer.Phase
+	editDigitPos int
+	blinkState   bool
+	lastBlink    time.Time
 }
 
 type tickMsg struct{}
@@ -33,8 +38,13 @@ func NewModel() *Model {
 	}
 
 	m := &Model{
-		timer: t,
-		audio: audioPlayer,
+		timer:        t,
+		audio:        audioPlayer,
+		editMode:     false,
+		editPhase:    timer.Work,
+		editDigitPos: 0,
+		blinkState:   true,
+		lastBlink:    time.Now(),
 	}
 
 	// Set up phase end callback
@@ -68,17 +78,52 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.audio.Close()
 			}
 			return m, tea.Quit
+		case "m":
+			m.toggleEditMode()
+		case "escape":
+			if m.editMode {
+				m.exitEditMode()
+			}
 		case " ":
-			if m.timer.Status == timer.Running {
-				m.timer.Pause()
-			} else if m.timer.Status == timer.Paused {
-				m.timer.Start()
+			if !m.editMode {
+				if m.timer.Status == timer.Running {
+					m.timer.Pause()
+				} else if m.timer.Status == timer.Paused {
+					m.timer.Start()
+				}
 			}
 		case "r":
-			m.timer.Reset()
+			if !m.editMode {
+				m.timer.Reset()
+			}
+		case "tab":
+			if m.editMode {
+				m.nextEditPhase()
+			}
+		case "h", "left":
+			if m.editMode {
+				m.editDigitPos = 0 // tens digit
+			}
+		case "l", "right":
+			if m.editMode {
+				m.editDigitPos = 1 // units digit
+			}
+		case "j", "down":
+			if m.editMode {
+				m.decrementDigit()
+			}
+		case "k", "up":
+			if m.editMode {
+				m.incrementDigit()
+			}
 		}
 
 	case tickMsg:
+		// Handle blinking in edit mode
+		if m.editMode && time.Since(m.lastBlink) > 500*time.Millisecond {
+			m.blinkState = !m.blinkState
+			m.lastBlink = time.Now()
+		}
 		return m, m.tickCmd()
 	}
 
@@ -86,28 +131,47 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) View() string {
-	// Phase info
+	// Phase info - show edit phase in edit mode
 	phaseColor := lipgloss.Color("2")
-	if m.timer.Phase == timer.Work {
-		phaseColor = lipgloss.Color("4")
+	var phaseText string
+	if m.editMode {
+		if m.editPhase == timer.Work {
+			phaseColor = lipgloss.Color("4")
+		}
+		phaseText = fmt.Sprintf("EDIT: %s Duration", m.getPhaseString(m.editPhase))
+	} else {
+		if m.timer.Phase == timer.Work {
+			phaseColor = lipgloss.Color("4")
+		}
+		phaseText = fmt.Sprintf("%s (%d/4)", m.timer.GetPhaseString(), m.timer.SessionCount)
 	}
 
-	phaseText := lipgloss.NewStyle().
+	phaseDisplay := lipgloss.NewStyle().
 		Foreground(phaseColor).
 		Bold(true).
-		Render(fmt.Sprintf("%s (%d/4)", m.timer.GetPhaseString(), m.timer.SessionCount))
+		Render(phaseText)
 
-	// Time display (ASCII art) - color based on status
-	timeStr := m.timer.FormatTime()
+	// Time display (ASCII art) - show edit time in edit mode or regular time
+	var timeStr string
+	if m.editMode {
+		minutes := m.timer.GetDurationForPhase(m.editPhase)
+		timeStr = m.formatEditTime(minutes)
+	} else {
+		timeStr = m.timer.FormatTime()
+	}
 	asciiTime := ascii.ToASCII(timeStr)
 
-	// Timer color based on status: running=yellow, paused=gray
+	// Timer color based on mode: edit=green, running=yellow, paused=gray
 	timerColor := lipgloss.Color("8") // Default gray
-	switch m.timer.Status {
-	case timer.Running:
-		timerColor = lipgloss.Color("3") // Yellow
-	case timer.Paused:
-		timerColor = lipgloss.Color("8") // Gray
+	if m.editMode {
+		timerColor = lipgloss.Color("2") // Green in edit mode
+	} else {
+		switch m.timer.Status {
+		case timer.Running:
+			timerColor = lipgloss.Color("3") // Yellow
+		case timer.Paused:
+			timerColor = lipgloss.Color("8") // Gray
+		}
 	}
 
 	timeText := lipgloss.NewStyle().
@@ -117,16 +181,23 @@ func (m *Model) View() string {
 		Padding(1, 2).
 		Render(asciiTime)
 
-	// Controls
+	// Controls - different text for edit mode vs normal mode
+	var controlsText string
+	if m.editMode {
+		controlsText = "[Tab] Switch Phase  [H/L] Select Digit  [J/K] Adjust Value  [M/Esc] Exit Edit  [Q] Quit"
+	} else {
+		controlsText = "[Space] Start/Pause  [R] Reset  [M] Edit Durations  [Q] Quit"
+	}
+
 	controls := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("7")).
-		Render("[Space] Start/Pause  [R] Reset  [Q] Quit")
+		Render(controlsText)
 
 	// Layout
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
 		"",
-		phaseText,
+		phaseDisplay,
 		"",
 		timeText,
 		"",
@@ -146,7 +217,7 @@ func (m *Model) View() string {
 }
 
 func (m *Model) tickCmd() tea.Cmd {
-	return tea.Tick(time.Second, func(time.Time) tea.Msg {
+	return tea.Tick(time.Millisecond, func(time.Time) tea.Msg {
 		return tickMsg{}
 	})
 }
@@ -159,5 +230,127 @@ func (m *Model) onPhaseEnd(phase timer.Phase) {
 		case timer.ShortBreak, timer.LongBreak:
 			go m.audio.PlayBreakEndSound()
 		}
+	}
+}
+
+func (m *Model) toggleEditMode() {
+	if m.editMode {
+		m.exitEditMode()
+	} else {
+		m.enterEditMode()
+	}
+}
+
+func (m *Model) enterEditMode() {
+	m.editMode = true
+	m.editPhase = m.timer.Phase
+	m.editDigitPos = 0
+	m.blinkState = true
+	m.lastBlink = time.Now()
+}
+
+func (m *Model) exitEditMode() {
+	m.editMode = false
+}
+
+func (m *Model) nextEditPhase() {
+	switch m.editPhase {
+	case timer.Work:
+		m.editPhase = timer.ShortBreak
+	case timer.ShortBreak:
+		m.editPhase = timer.LongBreak
+	case timer.LongBreak:
+		m.editPhase = timer.Work
+	}
+	m.editDigitPos = 0
+}
+
+func (m *Model) incrementDigit() {
+	currentMinutes := m.timer.GetDurationForPhase(m.editPhase)
+	newMinutes := m.adjustDigit(currentMinutes, 1)
+	if newMinutes >= 1 && newMinutes <= 60 {
+		m.timer.SetDurationForPhase(m.editPhase, newMinutes)
+	}
+}
+
+func (m *Model) decrementDigit() {
+	currentMinutes := m.timer.GetDurationForPhase(m.editPhase)
+	newMinutes := m.adjustDigit(currentMinutes, -1)
+	if newMinutes >= 1 && newMinutes <= 60 {
+		m.timer.SetDurationForPhase(m.editPhase, newMinutes)
+	}
+}
+
+func (m *Model) adjustDigit(minutes, delta int) int {
+	tens := minutes / 10
+	units := minutes % 10
+
+	if m.editDigitPos == 0 { // tens digit
+		newTens := tens + delta
+		if newTens < 0 {
+			newTens = 6 // wrap to 60
+			units = 0   // force units to 0 for 60
+		} else if newTens > 6 {
+			newTens = 0 // wrap to 0x
+		} else if newTens == 6 {
+			units = 0 // force units to 0 when tens = 6 (only 60 allowed)
+		}
+		return newTens*10 + units
+	} else { // units digit
+		newUnits := units + delta
+		if tens == 6 {
+			// Special case: when tens=6, units must stay 0 (only 60 allowed)
+			return 60
+		} else if newUnits < 0 {
+			if tens == 0 {
+				// At 0x, wrap to 60
+				return 60
+			} else {
+				// Normal wrap to 9
+				newUnits = 9
+			}
+		} else if newUnits > 9 {
+			if tens == 5 && newUnits == 10 {
+				// 59 -> 60 (special case)
+				return 60
+			} else {
+				// Normal wrap to 0
+				newUnits = 0
+			}
+		}
+		return tens*10 + newUnits
+	}
+}
+
+func (m *Model) formatEditTime(minutes int) string {
+	tens := minutes / 10
+	units := minutes % 10
+
+	// Create the time string with potential blinking
+	tensStr := fmt.Sprintf("%d", tens)
+	unitsStr := fmt.Sprintf("%d", units)
+
+	// Make selected digit blink (replace with space to maintain width)
+	if !m.blinkState {
+		if m.editDigitPos == 0 {
+			tensStr = " " // Use space to maintain character width
+		} else {
+			unitsStr = " " // Use space to maintain character width
+		}
+	}
+
+	return fmt.Sprintf("%s%s:00", tensStr, unitsStr)
+}
+
+func (m *Model) getPhaseString(phase timer.Phase) string {
+	switch phase {
+	case timer.Work:
+		return "Work Session"
+	case timer.ShortBreak:
+		return "Short Break"
+	case timer.LongBreak:
+		return "Long Break"
+	default:
+		return "Work Session"
 	}
 }

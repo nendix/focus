@@ -2,7 +2,7 @@ package ascii
 
 import "strings"
 
-// ASCII art patterns for digits 0-9 and colon
+// ASCII art patterns for digits 0-9, colon, and space
 var asciiDigits = map[rune][]string{
 	'0': {
 		"██████",
@@ -80,6 +80,13 @@ var asciiDigits = map[rune][]string{
 		"  ",
 		"██",
 		"  ",
+	},
+	' ': {
+		"      ",
+		"      ",
+		"      ",
+		"      ",
+		"      ",
 	},
 }
 

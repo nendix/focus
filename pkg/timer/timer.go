@@ -22,26 +22,32 @@ const (
 )
 
 type Timer struct {
-	Phase        Phase
-	Status       Status
-	Duration     time.Duration
-	Remaining    time.Duration
-	SessionCount int
-	MaxSessions  int
-	ticker       *time.Ticker
-	done         chan bool
-	OnPhaseEnd   func(Phase)
+	Phase              Phase
+	Status             Status
+	Duration           time.Duration
+	Remaining          time.Duration
+	SessionCount       int
+	MaxSessions        int
+	WorkDuration       time.Duration
+	ShortBreakDuration time.Duration
+	LongBreakDuration  time.Duration
+	ticker             *time.Ticker
+	done               chan bool
+	OnPhaseEnd         func(Phase)
 }
 
 func New() *Timer {
 	return &Timer{
-		Phase:        Work,
-		Status:       Paused,
-		Duration:     3 * time.Second, // 25 minutes for work
-		Remaining:    3 * time.Second,
-		SessionCount: 1,
-		MaxSessions:  4,
-		done:         make(chan bool),
+		Phase:              Work,
+		Status:             Paused,
+		Duration:           25 * time.Minute, // 25 minutes for work
+		Remaining:          25 * time.Minute,
+		SessionCount:       1,
+		MaxSessions:        4,
+		WorkDuration:       25 * time.Minute,
+		ShortBreakDuration: 5 * time.Minute,
+		LongBreakDuration:  15 * time.Minute,
+		done:               make(chan bool),
 	}
 }
 
@@ -131,16 +137,83 @@ func (t *Timer) nextPhase() {
 	t.Start()
 }
 
+func (t *Timer) SetWorkDuration(minutes int) {
+	t.WorkDuration = time.Duration(minutes) * time.Minute
+	// Update current duration and remaining time if we're in a work phase
+	if t.Phase == Work {
+		t.Duration = t.WorkDuration
+		t.Remaining = t.WorkDuration
+	}
+}
+
+func (t *Timer) SetShortBreakDuration(minutes int) {
+	t.ShortBreakDuration = time.Duration(minutes) * time.Minute
+	// Update current duration and remaining time if we're in a short break phase
+	if t.Phase == ShortBreak {
+		t.Duration = t.ShortBreakDuration
+		t.Remaining = t.ShortBreakDuration
+	}
+}
+
+func (t *Timer) SetLongBreakDuration(minutes int) {
+	t.LongBreakDuration = time.Duration(minutes) * time.Minute
+	// Update current duration and remaining time if we're in a long break phase
+	if t.Phase == LongBreak {
+		t.Duration = t.LongBreakDuration
+		t.Remaining = t.LongBreakDuration
+	}
+}
+
+func (t *Timer) GetShortBreakDuration() int {
+	return int(t.ShortBreakDuration.Minutes())
+}
+
+func (t *Timer) GetLongBreakDuration() int {
+	return int(t.LongBreakDuration.Minutes())
+}
+
+func (t *Timer) GetWorkDuration() int {
+	return int(t.WorkDuration.Minutes())
+}
+
+func (t *Timer) GetBreakDuration() int {
+	return int(t.ShortBreakDuration.Minutes())
+}
+
+func (t *Timer) GetDurationForPhase(phase Phase) int {
+	switch phase {
+	case Work:
+		return int(t.WorkDuration.Minutes())
+	case ShortBreak:
+		return int(t.ShortBreakDuration.Minutes())
+	case LongBreak:
+		return int(t.LongBreakDuration.Minutes())
+	default:
+		return int(t.WorkDuration.Minutes())
+	}
+}
+
+func (t *Timer) SetDurationForPhase(phase Phase, minutes int) {
+	switch phase {
+	case Work:
+		t.SetWorkDuration(minutes)
+	case ShortBreak:
+		t.SetShortBreakDuration(minutes)
+	case LongBreak:
+		t.SetLongBreakDuration(minutes)
+	}
+}
+
 func (t *Timer) getDurationForPhase(phase Phase) time.Duration {
 	switch phase {
 	case Work:
-		return 25 * time.Minute
+		return t.WorkDuration
 	case ShortBreak:
-		return 5 * time.Minute
+		return t.ShortBreakDuration
 	case LongBreak:
-		return 15 * time.Minute
+		return t.LongBreakDuration
 	default:
-		return 25 * time.Minute
+		return t.WorkDuration
 	}
 }
 
