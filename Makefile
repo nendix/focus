@@ -1,16 +1,16 @@
 .PHONY: build run clean
 
 build:
-	go build -o out/pomodoro ./cmd/pomodoro
+	go build -o out/focus ./cmd/focus
 
 run: build
-	./out/pomodoro
+	./out/focus
 
 clean:
-	rm -f out/pomodoro
+	rm -f out/focus
 
 install:
-	go install ./cmd/pomodoro
+	go install ./cmd/focus
 
 test:
 	go test ./...
