@@ -1,23 +1,22 @@
 # Focus
 
-A minimalist terminal-based Pomodoro timer built with Go and Bubble Tea.
+Strongly vibe-coded-minimalist TUI for the Pomodoro timer technique built with Go and Bubble Tea.
 
 ## Features
 
-- 🍅 **Classic Pomodoro Technique**: 25-minute work sessions, 5-minute short breaks, 15-minute long breaks
-- ⏱️ **Customizable Durations**: Edit work and break durations with vim-like controls (1-60 minutes)
-- 🎯 **Modal Duration Editor**: Press M to enter edit mode with intuitive keyboard navigation
-- 🔊 **Audio Notifications**: Different sounds for work-end and break-end
-- ⌨️ **Simple Controls**: Keyboard shortcuts for all operations
-- 🎨 **Clean TUI**: Beautiful terminal interface with colors and styling
-- 🔄 **Visual Status**: Color-coded timer (Yellow=running, Gray=paused, Green=editing)
+- **Pomodoro Technique**: 25-minute work sessions, 5-minute short breaks, 15-minute long breaks
+- **Customizable Durations**: Edit work and break durations with vim-like controls (1-60 minutes)
+- **Audio Notifications**: Different sounds for work phase ending and break phase ending
+- **Simple Controls**: Keyboard commands for all operations
+- **Clean TUI**: Minimal terminal interface with colors and styling
 
 ## Usage
 
 ### Build and Run
 ```bash
-go build -o focus ./cmd/focus
-./focus
+git clone https://github.com/nendix/focus.git
+cd focus
+make run
 ```
 
 ### Controls
@@ -34,7 +33,7 @@ go build -o focus ./cmd/focus
 - **J/K** or **↑/↓**: Increment/decrement selected digit
 - **M/Esc**: Exit edit mode
 
-## Timer Phases
+## Default Timer Durations
 
 1. **Work Session** (25 minutes) - Focus time
 2. **Short Break** (5 minutes) - Quick rest  
@@ -48,12 +47,6 @@ go build -o focus ./cmd/focus
 - Use **J/K** to adjust the selected digit (1-60 minute range)
 - Selected digit blinks to show current position
 - Changes apply immediately
-
-## Audio
-
-The app generates beep tones for notifications:
-- **Work End**: Double beep
-- **Break End**: Single long beep
 
 ## Requirements
 
