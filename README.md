@@ -37,16 +37,7 @@ make run
 
 1. **Work Session** (25 minutes) - Focus time
 2. **Short Break** (5 minutes) - Quick rest  
-3. After 4 work sessions: **Long Break** (15 minutes) - Extended rest
-
-## Duration Editing
-
-- Press **M** to enter edit mode (timer turns green)
-- Use **Tab** to cycle through Work/Short Break/Long Break phases
-- Use **H/L** to select tens or units digit
-- Use **J/K** to adjust the selected digit (1-60 minute range)
-- Selected digit blinks to show current position
-- Changes apply immediately
+3. **Long Break** (15 minutes) - Extended rest after 4 work sessions
 
 ## Requirements
 
