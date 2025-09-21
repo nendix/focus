@@ -1,9 +1,7 @@
 package notification
 
 import (
-	"fmt"
-	"os/exec"
-	"runtime"
+	"github.com/gen2brain/beeep"
 
 	"focus/pkg/timer"
 )
@@ -14,7 +12,7 @@ type Notifier struct {
 
 func New() *Notifier {
 	return &Notifier{
-		enabled: runtime.GOOS == "darwin",
+		enabled: true, // Works cross-platform
 	}
 }
 
@@ -23,9 +21,7 @@ func (n *Notifier) Show(title, message string) error {
 		return nil
 	}
 
-	script := fmt.Sprintf(`display notification "%s" with title "%s" sound name "default"`, message, title)
-	cmd := exec.Command("osascript", "-e", script)
-	return cmd.Run()
+	return beeep.Alert(title, message, "../../assets/icon.png")
 }
 
 func (n *Notifier) NotifyPhaseEnd(phase timer.Phase) {

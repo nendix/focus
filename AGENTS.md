@@ -28,6 +28,7 @@
 
 ## Architecture
 - Main entry: `cmd/focus/main.go`
-- Packages: `pkg/{timer,ui,audio,ascii}` with clear separation of concerns
+- Packages: `pkg/{timer,ui,notification,ascii}` with clear separation of concerns
 - UI: Uses Bubble Tea framework for terminal UI
-- Dependencies: Minimal external dependencies (Charm libraries for UI, Ebitengine for audio)
+- Notifications: Cross-platform using beeep library (macOS, Linux, Windows)
+- Dependencies: Minimal external dependencies (Charm libraries for UI, beeep for notifications)
