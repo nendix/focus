@@ -1,13 +1,14 @@
 package audio
 
 import (
+	"bytes"
 	"fmt"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/ebitengine/oto/v3"
 	"github.com/hajimehoshi/go-mp3"
+
+	"focus/pkg/assets"
 )
 
 type Player struct {
@@ -31,19 +32,12 @@ func New() (*Player, error) {
 	return &Player{context: ctx}, nil
 }
 
-func (p *Player) playSound(filename string) error {
-	// Get the path to the audio file
-	audioPath := filepath.Join("assets", filename)
+func (p *Player) playSound(data []byte) error {
+	reader := bytes.NewReader(data)
 
-	file, err := os.Open(audioPath)
+	decoder, err := mp3.NewDecoder(reader)
 	if err != nil {
-		return fmt.Errorf("failed to open audio file %s: %w", filename, err)
-	}
-	defer file.Close()
-
-	decoder, err := mp3.NewDecoder(file)
-	if err != nil {
-		return fmt.Errorf("failed to decode MP3 %s: %w", filename, err)
+		return fmt.Errorf("failed to decode MP3: %w", err)
 	}
 
 	// Create a player from the decoder
@@ -63,14 +57,14 @@ func (p *Player) playSound(filename string) error {
 }
 
 func (p *Player) PlayWorkEndSound() {
-	if err := p.playSound("work-end.mp3"); err != nil {
+	if err := p.playSound(assets.WorkEndSound); err != nil {
 		// Silently fail if audio can't play, don't crash the app
 		fmt.Printf("Audio playback failed: %v\n", err)
 	}
 }
 
 func (p *Player) PlayBreakEndSound() {
-	if err := p.playSound("break-end.mp3"); err != nil {
+	if err := p.playSound(assets.BreakEndSound); err != nil {
 		// Silently fail if audio can't play, don't crash the app
 		fmt.Printf("Audio playback failed: %v\n", err)
 	}
