@@ -48,6 +48,9 @@ func New() *Timer {
 		ShortBreakDuration: 5 * time.Minute,
 		LongBreakDuration:  15 * time.Minute,
 		done:               make(chan bool),
+		// for testing
+		// Duration:           5 * time.Second,
+		// Remaining:          5 * time.Second,
 	}
 }
 

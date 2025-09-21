@@ -21,7 +21,8 @@ func (n *Notifier) Show(title, message string) error {
 		return nil
 	}
 
-	return beeep.Alert(title, message, "../../assets/icon.png")
+	beeep.AppName = "Focus"
+	return beeep.Alert(title, message, "")
 }
 
 func (n *Notifier) NotifyPhaseEnd(phase timer.Phase) {
@@ -32,14 +33,14 @@ func (n *Notifier) NotifyPhaseEnd(phase timer.Phase) {
 	var title, message string
 	switch phase {
 	case timer.Work:
-		title = "Focus"
-		message = "Work session complete!"
+		title = "Break time!"
+		message = "Your work is over."
 	case timer.ShortBreak:
-		title = "Focus"
-		message = "Short break over!"
+		title = "Work time!"
+		message = "Your break is over."
 	case timer.LongBreak:
-		title = "Focus"
-		message = "Long break over!"
+		title = "Work time!"
+		message = "Your long break is over."
 	default:
 		return
 	}
