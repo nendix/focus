@@ -8,13 +8,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"focus/pkg/ascii"
-	"focus/pkg/audio"
+	"focus/pkg/notification"
 	"focus/pkg/timer"
 )
 
 type Model struct {
 	timer        *timer.Timer
-	audio        *audio.Player
+	notifier     *notification.Notifier
 	width        int
 	height       int
 	editMode     bool
@@ -30,16 +30,12 @@ func NewModel() *Model {
 	// Create timer
 	t := timer.New()
 
-	// Create audio player
-	audioPlayer, err := audio.New()
-	if err != nil {
-		// Continue without audio if it fails
-		audioPlayer = nil
-	}
+	// Create notifier
+	notifier := notification.New()
 
 	m := &Model{
 		timer:        t,
-		audio:        audioPlayer,
+		notifier:     notifier,
 		editMode:     false,
 		editPhase:    timer.Work,
 		editDigitPos: 0,
@@ -74,9 +70,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			m.timer.Stop()
-			if m.audio != nil {
-				m.audio.Close()
-			}
 			return m, tea.Quit
 		case "m":
 			m.toggleEditMode()
@@ -223,13 +216,9 @@ func (m *Model) tickCmd() tea.Cmd {
 }
 
 func (m *Model) onPhaseEnd(phase timer.Phase) {
-	if m.audio != nil {
-		switch phase {
-		case timer.Work:
-			go m.audio.PlayWorkEndSound()
-		case timer.ShortBreak, timer.LongBreak:
-			go m.audio.PlayBreakEndSound()
-		}
+	// Show system notification
+	if m.notifier != nil {
+		m.notifier.NotifyPhaseEnd(phase)
 	}
 }
 
