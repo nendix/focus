@@ -19,7 +19,7 @@ cd focus
 make run
 ```
 
-### Controls
+## Controls
 
 #### Normal Mode
 - **Space**: Start/Pause timer
