@@ -135,9 +135,9 @@ func (m *Model) View() string {
 	} else {
 		if m.timer.Phase == timer.Work {
 			phaseColor = lipgloss.Color("4")
-			phaseText = fmt.Sprintf("%s (%d/%d)", m.timer.GetPhaseString(), m.timer.SessionCount, m.timer.MaxSessions)
+			phaseText = fmt.Sprintf("%s (%d/%d)", m.getPhaseString(m.timer.Phase), m.timer.SessionCount, m.timer.MaxSessions)
 		} else {
-			phaseText = fmt.Sprintf("%s", m.timer.GetPhaseString())
+			phaseText = fmt.Sprintf("%s", m.getPhaseString(m.timer.Phase))
 		}
 	}
 

@@ -131,12 +131,20 @@ func (t *Timer) nextPhase() {
 	t.Start()
 }
 
+func (t *Timer) GetWorkDuration() int {
+	return int(t.WorkDuration.Minutes())
+}
+
 func (t *Timer) SetWorkDuration(minutes int) {
 	t.WorkDuration = time.Duration(minutes) * time.Minute
 	// Update remaining time if we're in a work phase
 	if t.Phase == Work {
 		t.Remaining = t.WorkDuration
 	}
+}
+
+func (t *Timer) GetShortBreakDuration() int {
+	return int(t.ShortBreakDuration.Minutes())
 }
 
 func (t *Timer) SetShortBreakDuration(minutes int) {
@@ -147,6 +155,10 @@ func (t *Timer) SetShortBreakDuration(minutes int) {
 	}
 }
 
+func (t *Timer) GetLongBreakDuration() int {
+	return int(t.LongBreakDuration.Minutes())
+}
+
 func (t *Timer) SetLongBreakDuration(minutes int) {
 	t.LongBreakDuration = time.Duration(minutes) * time.Minute
 	// Update remaining time if we're in a long break phase
@@ -155,44 +167,8 @@ func (t *Timer) SetLongBreakDuration(minutes int) {
 	}
 }
 
-func (t *Timer) GetShortBreakDuration() int {
-	return int(t.ShortBreakDuration.Minutes())
-}
-
-func (t *Timer) GetLongBreakDuration() int {
-	return int(t.LongBreakDuration.Minutes())
-}
-
-func (t *Timer) GetWorkDuration() int {
-	return int(t.WorkDuration.Minutes())
-}
-
-func (t *Timer) GetBreakDuration() int {
-	return int(t.ShortBreakDuration.Minutes())
-}
-
 func (t *Timer) GetDurationForPhase(phase Phase) int {
-	switch phase {
-	case Work:
-		return int(t.WorkDuration.Minutes())
-	case ShortBreak:
-		return int(t.ShortBreakDuration.Minutes())
-	case LongBreak:
-		return int(t.LongBreakDuration.Minutes())
-	default:
-		return int(t.WorkDuration.Minutes())
-	}
-}
-
-func (t *Timer) SetDurationForPhase(phase Phase, minutes int) {
-	switch phase {
-	case Work:
-		t.SetWorkDuration(minutes)
-	case ShortBreak:
-		t.SetShortBreakDuration(minutes)
-	case LongBreak:
-		t.SetLongBreakDuration(minutes)
-	}
+	return int(t.getDurationForPhase(phase).Minutes())
 }
 
 func (t *Timer) getDurationForPhase(phase Phase) time.Duration {
@@ -208,38 +184,14 @@ func (t *Timer) getDurationForPhase(phase Phase) time.Duration {
 	}
 }
 
-func (t *Timer) GetProgress() float64 {
-	duration := t.getDurationForPhase(t.Phase)
-	if duration == 0 {
-		return 0
-	}
-	elapsed := duration - t.Remaining
-	return float64(elapsed) / float64(duration)
-}
-
-func (t *Timer) GetPhaseString() string {
-	switch t.Phase {
+func (t *Timer) SetDurationForPhase(phase Phase, minutes int) {
+	switch phase {
 	case Work:
-		return "Work"
+		t.SetWorkDuration(minutes)
 	case ShortBreak:
-		return "Short Break"
+		t.SetShortBreakDuration(minutes)
 	case LongBreak:
-		return "Long Break"
-	default:
-		return "Work"
-	}
-}
-
-func (t *Timer) GetStatusString() string {
-	switch t.Status {
-	case Running:
-		return "Running"
-	case Stopped:
-		return "Paused"
-	case Finished:
-		return "Finished"
-	default:
-		return "Running"
+		t.SetLongBreakDuration(minutes)
 	}
 }
 
