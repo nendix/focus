@@ -51,6 +51,9 @@ func New() *Timer {
 		// for testing
 		// Duration:           5 * time.Second,
 		// Remaining:          5 * time.Second,
+		// WorkDuration:       5 * time.Second,
+		// ShortBreakDuration: 5 * time.Second,
+		// LongBreakDuration:  5 * time.Second,
 	}
 }
 
@@ -121,15 +124,17 @@ func (t *Timer) finish() {
 func (t *Timer) nextPhase() {
 	switch t.Phase {
 	case Work:
-		t.SessionCount++
 		if t.SessionCount >= t.MaxSessions {
 			t.Phase = LongBreak
-			t.SessionCount = 0
 		} else {
 			t.Phase = ShortBreak
 		}
-	case ShortBreak, LongBreak:
+	case ShortBreak:
 		t.Phase = Work
+		t.SessionCount++
+	case LongBreak:
+		t.Phase = Work
+		t.SessionCount = 1
 	}
 
 	t.Duration = t.getDurationForPhase(t.Phase)
