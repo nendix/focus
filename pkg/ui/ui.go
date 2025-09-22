@@ -69,9 +69,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c":
-			m.timer.Stop()
+			m.timer.Quit()
 			return m, tea.Quit
-		case "m":
+		case "e":
 			m.toggleEditMode()
 		case "escape":
 			if m.editMode {
@@ -80,8 +80,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case " ":
 			if !m.editMode {
 				if m.timer.Status == timer.Running {
-					m.timer.Pause()
-				} else if m.timer.Status == timer.Paused {
+					m.timer.Stop()
+				} else if m.timer.Status == timer.Stopped {
 					m.timer.Start()
 				}
 			}
@@ -155,14 +155,14 @@ func (m *Model) View() string {
 	asciiTime := ascii.ToASCII(timeStr)
 
 	// Timer color based on mode: edit=green, running=yellow, paused=gray
-	timerColor := lipgloss.Color("8") // Default gray
+	timerColor := lipgloss.Color("3") // Default yellow
 	if m.editMode {
 		timerColor = lipgloss.Color("2") // Green in edit mode
 	} else {
 		switch m.timer.Status {
 		case timer.Running:
 			timerColor = lipgloss.Color("3") // Yellow
-		case timer.Paused:
+		case timer.Stopped:
 			timerColor = lipgloss.Color("8") // Gray
 		}
 	}
@@ -177,9 +177,9 @@ func (m *Model) View() string {
 	// Controls - different text for edit mode vs normal mode
 	var controlsText string
 	if m.editMode {
-		controlsText = "[Tab] Switch Phase  [H/L] Select Digit  [J/K] Adjust Value  [M/Esc] Exit Edit  [Q] Quit"
+		controlsText = "[Tab] Switch Phase  [H/L] Select Digit  [J/K] Adjust Value  [E] Exit [Q] Quit"
 	} else {
-		controlsText = "[Space] Start/Pause  [R] Reset  [M] Edit Durations  [Q] Quit"
+		controlsText = "[Space] Start/Pause  [R] Reset  [E] Edit [Q] Quit"
 	}
 
 	controls := lipgloss.NewStyle().
@@ -334,12 +334,12 @@ func (m *Model) formatEditTime(minutes int) string {
 func (m *Model) getPhaseString(phase timer.Phase) string {
 	switch phase {
 	case timer.Work:
-		return "Work Session"
+		return "Work"
 	case timer.ShortBreak:
 		return "Short Break"
 	case timer.LongBreak:
 		return "Long Break"
 	default:
-		return "Work Session"
+		return "Work"
 	}
 }

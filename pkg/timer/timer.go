@@ -17,14 +17,13 @@ type Status int
 
 const (
 	Running Status = iota
-	Paused
+	Stopped
 	Finished
 )
 
 type Timer struct {
 	Phase              Phase
 	Status             Status
-	Duration           time.Duration
 	Remaining          time.Duration
 	SessionCount       int
 	MaxSessions        int
@@ -39,17 +38,15 @@ type Timer struct {
 func New() *Timer {
 	return &Timer{
 		Phase:              Work,
-		Status:             Paused,
-		Duration:           25 * time.Minute, // 25 minutes for work
 		Remaining:          25 * time.Minute,
-		SessionCount:       1,
-		MaxSessions:        4,
 		WorkDuration:       25 * time.Minute,
 		ShortBreakDuration: 5 * time.Minute,
 		LongBreakDuration:  15 * time.Minute,
+		Status:             Running,
+		SessionCount:       1,
+		MaxSessions:        4,
 		done:               make(chan bool),
 		// for testing
-		// Duration:           5 * time.Second,
 		// Remaining:          5 * time.Second,
 		// WorkDuration:       5 * time.Second,
 		// ShortBreakDuration: 5 * time.Second,
@@ -58,10 +55,6 @@ func New() *Timer {
 }
 
 func (t *Timer) Start() {
-	if t.Status == Running {
-		return
-	}
-
 	t.Status = Running
 	t.ticker = time.NewTicker(time.Second)
 
@@ -81,27 +74,22 @@ func (t *Timer) Start() {
 	}()
 }
 
-func (t *Timer) Pause() {
-	if t.Status != Running {
-		return
-	}
-
-	t.Status = Paused
+func (t *Timer) Stop() {
+	t.Status = Stopped
 	if t.ticker != nil {
 		t.ticker.Stop()
 	}
 }
 
 func (t *Timer) Reset() {
-	t.Status = Paused
+	t.Status = Stopped
 	if t.ticker != nil {
 		t.ticker.Stop()
 	}
 	t.Remaining = t.getDurationForPhase(t.Phase)
 }
 
-func (t *Timer) Stop() {
-	t.Status = Paused
+func (t *Timer) Quit() {
 	if t.ticker != nil {
 		t.ticker.Stop()
 	}
@@ -137,9 +125,7 @@ func (t *Timer) nextPhase() {
 		t.SessionCount = 1
 	}
 
-	t.Duration = t.getDurationForPhase(t.Phase)
-	t.Remaining = t.Duration
-	t.Status = Paused
+	t.Remaining = t.getDurationForPhase(t.Phase)
 
 	// Auto-start the next phase
 	t.Start()
@@ -147,27 +133,24 @@ func (t *Timer) nextPhase() {
 
 func (t *Timer) SetWorkDuration(minutes int) {
 	t.WorkDuration = time.Duration(minutes) * time.Minute
-	// Update current duration and remaining time if we're in a work phase
+	// Update remaining time if we're in a work phase
 	if t.Phase == Work {
-		t.Duration = t.WorkDuration
 		t.Remaining = t.WorkDuration
 	}
 }
 
 func (t *Timer) SetShortBreakDuration(minutes int) {
 	t.ShortBreakDuration = time.Duration(minutes) * time.Minute
-	// Update current duration and remaining time if we're in a short break phase
+	// Update remaining time if we're in a short break phase
 	if t.Phase == ShortBreak {
-		t.Duration = t.ShortBreakDuration
 		t.Remaining = t.ShortBreakDuration
 	}
 }
 
 func (t *Timer) SetLongBreakDuration(minutes int) {
 	t.LongBreakDuration = time.Duration(minutes) * time.Minute
-	// Update current duration and remaining time if we're in a long break phase
+	// Update remaining time if we're in a long break phase
 	if t.Phase == LongBreak {
-		t.Duration = t.LongBreakDuration
 		t.Remaining = t.LongBreakDuration
 	}
 }
@@ -226,23 +209,24 @@ func (t *Timer) getDurationForPhase(phase Phase) time.Duration {
 }
 
 func (t *Timer) GetProgress() float64 {
-	if t.Duration == 0 {
+	duration := t.getDurationForPhase(t.Phase)
+	if duration == 0 {
 		return 0
 	}
-	elapsed := t.Duration - t.Remaining
-	return float64(elapsed) / float64(t.Duration)
+	elapsed := duration - t.Remaining
+	return float64(elapsed) / float64(duration)
 }
 
 func (t *Timer) GetPhaseString() string {
 	switch t.Phase {
 	case Work:
-		return "Work Session"
+		return "Work"
 	case ShortBreak:
 		return "Short Break"
 	case LongBreak:
 		return "Long Break"
 	default:
-		return "Work Session"
+		return "Work"
 	}
 }
 
@@ -250,12 +234,12 @@ func (t *Timer) GetStatusString() string {
 	switch t.Status {
 	case Running:
 		return "Running"
-	case Paused:
+	case Stopped:
 		return "Paused"
 	case Finished:
 		return "Finished"
 	default:
-		return "Paused"
+		return "Running"
 	}
 }
 
