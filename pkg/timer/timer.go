@@ -47,9 +47,9 @@ func New() *Timer {
 		MaxSessions:        4,
 		done:               make(chan bool),
 		// for testing
-		// Remaining:          5 * time.Second,
-		// WorkDuration:       5 * time.Second,
-		// ShortBreakDuration: 5 * time.Second,
+		// Remaining:          3 * time.Second,
+		// WorkDuration:       3 * time.Second,
+		// ShortBreakDuration: 3 * time.Second,
 		// LongBreakDuration:  5 * time.Second,
 	}
 }

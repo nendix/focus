@@ -135,8 +135,10 @@ func (m *Model) View() string {
 	} else {
 		if m.timer.Phase == timer.Work {
 			phaseColor = lipgloss.Color("4")
+			phaseText = fmt.Sprintf("%s (%d/%d)", m.timer.GetPhaseString(), m.timer.SessionCount, m.timer.MaxSessions)
+		} else {
+			phaseText = fmt.Sprintf("%s", m.timer.GetPhaseString())
 		}
-		phaseText = fmt.Sprintf("%s (%d/4)", m.timer.GetPhaseString(), m.timer.SessionCount)
 	}
 
 	phaseDisplay := lipgloss.NewStyle().
@@ -336,7 +338,7 @@ func (m *Model) getPhaseString(phase timer.Phase) string {
 	case timer.Work:
 		return "Work"
 	case timer.ShortBreak:
-		return "Short Break"
+		return "Break"
 	case timer.LongBreak:
 		return "Long Break"
 	default:
