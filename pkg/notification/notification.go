@@ -3,7 +3,7 @@ package notification
 import (
 	"github.com/gen2brain/beeep"
 
-	"focus/pkg/timer"
+	"github.com/nendix/focus/pkg/timer"
 )
 
 type Notifier struct {

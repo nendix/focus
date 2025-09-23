@@ -1,4 +1,4 @@
-module focus
+module github.com/nendix/focus
 
 go 1.25.1
 

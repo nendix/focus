@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"focus/pkg/ui"
+	"github.com/nendix/focus/pkg/ui"
 )
 
 var (

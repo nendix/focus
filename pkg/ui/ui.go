@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nendix/focus/pkg/timer"
+
+	"github.com/nendix/focus/pkg/notification"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"focus/pkg/ascii"
-	"focus/pkg/notification"
-	"focus/pkg/timer"
+	"github.com/nendix/focus/pkg/ascii"
 )
 
 type Model struct {

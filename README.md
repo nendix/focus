@@ -10,13 +10,9 @@ Strongly vibe-coded-minimalist TUI for the Pomodoro timer technique built with G
 - **Simple Controls**: Keyboard commands for all operations
 - **Clean TUI**: Minimal terminal interface with colors and styling
 
-## Usage
-
-### Build and Run
+## Installation
 ```bash
-git clone https://github.com/nendix/focus.git
-cd focus
-make run
+go install github.com/nendix/focus/cmd/focus@latest
 ```
 
 ## Controls
