@@ -4,14 +4,15 @@ help: ## show help message
 
 .PHONY: build
 build: ## builds the app
-	go build -o out/focus ./cmd/focus
+	@VERSION=$$(git describe --tags --always 2>/dev/null || echo "dev"); \
+	go build -ldflags="-X 'main.version=$$VERSION'" -o out/focus ./cmd/focus
 
 .PHONY: run
 run: build ## runs the app
 	./out/focus
 
 .PHONY: clean
-clean:
+clean: ## cleans the binary
 	rm -f out/focus
 
 .PHONY: install
@@ -19,7 +20,7 @@ install: ## installs the app
 	go install github.com/nendix/focus/cmd/focus@latest
 
 .PHONY: release
-release:  ## creates a release on github (e.g. make release name=v0.20)
+release:  ## creates a release on github (e.g. make release name=v1.3.7)
 	git push
 	gh release create $(name) --generate-notes
 	git fetch --all
@@ -27,11 +28,3 @@ release:  ## creates a release on github (e.g. make release name=v0.20)
 .PHONY: test
 test: ## runs the tests
 	go test ./...
-
-.PHONY: fmt
-fmt: ## formats the code
-	go fmt ./...
-
-.PHONY: vet
-vet: ## checks the code
-	go vet ./...
