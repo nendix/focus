@@ -20,6 +20,7 @@ type Model struct {
 	width        int
 	height       int
 	editMode     bool
+	helpMode     bool
 	editPhase    timer.Phase
 	editDigitPos int
 	blinkState   bool
@@ -39,6 +40,7 @@ func NewModel() *Model {
 		timer:        t,
 		notifier:     notifier,
 		editMode:     false,
+		helpMode:     false,
 		editPhase:    timer.Work,
 		editDigitPos: 0,
 		blinkState:   true,
@@ -75,22 +77,23 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "e":
 			m.toggleEditMode()
-		case "escape":
-			if m.editMode {
-				m.exitEditMode()
+		case "?":
+			m.toggleHelpMode()
+		case "esc":
+			if m.helpMode {
+				m.helpMode = false
+			} else if m.editMode {
+				m.editMode = false
 			}
 		case " ":
-			if !m.editMode {
-				if m.timer.Status == timer.Running {
-					m.timer.Stop()
-				} else if m.timer.Status == timer.Stopped {
-					m.timer.Start()
-				}
+			switch m.timer.Status {
+			case timer.Running:
+				m.timer.Stop()
+			case timer.Stopped:
+				m.timer.Start()
 			}
 		case "r":
-			if !m.editMode {
-				m.timer.Reset()
-			}
+			m.timer.Reset()
 		case "tab":
 			if m.editMode {
 				m.nextEditPhase()
@@ -126,91 +129,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) View() string {
-	// Phase info - show edit phase in edit mode
-	phaseColor := lipgloss.Color("2")
-	var phaseText string
-	if m.editMode {
-		if m.editPhase == timer.Work {
-			phaseColor = lipgloss.Color("4")
-		}
-		phaseText = fmt.Sprintf("EDIT: %s Duration", m.getPhaseString(m.editPhase))
-	} else {
-		if m.timer.Phase == timer.Work {
-			phaseColor = lipgloss.Color("4")
-			phaseText = fmt.Sprintf("%s (%d/%d)", m.getPhaseString(m.timer.Phase), m.timer.SessionCount, m.timer.MaxSessions)
-		} else {
-			phaseText = fmt.Sprintf("%s", m.getPhaseString(m.timer.Phase))
-		}
+	if m.helpMode {
+		return m.renderHelpScreen()
 	}
 
-	phaseDisplay := lipgloss.NewStyle().
-		Foreground(phaseColor).
-		Bold(true).
-		Render(phaseText)
-
-	// Time display (ASCII art) - show edit time in edit mode or regular time
-	var timeStr string
 	if m.editMode {
-		minutes := m.timer.GetDurationForPhase(m.editPhase)
-		timeStr = m.formatEditTime(minutes)
-	} else {
-		timeStr = m.timer.FormatTime()
-	}
-	asciiTime := ascii.ToASCII(timeStr)
-
-	// Timer color based on mode: edit=green, running=yellow, paused=gray
-	timerColor := lipgloss.Color("3") // Default yellow
-	if m.editMode {
-		timerColor = lipgloss.Color("2") // Green in edit mode
-	} else {
-		switch m.timer.Status {
-		case timer.Running:
-			timerColor = lipgloss.Color("3") // Yellow
-		case timer.Stopped:
-			timerColor = lipgloss.Color("8") // Gray
-		}
+		return m.renderEditMode()
 	}
 
-	timeText := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(timerColor).
-		Align(lipgloss.Center).
-		Padding(1, 2).
-		Render(asciiTime)
-
-	// Controls - different text for edit mode vs normal mode
-	var controlsText string
-	if m.editMode {
-		controlsText = "[Tab] Switch Phase  [H/L] Select Digit  [J/K] Adjust Value  [E] Exit [Q] Quit"
-	} else {
-		controlsText = "[Space] Start/Pause  [R] Reset  [E] Edit [Q] Quit"
-	}
-
-	controls := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("7")).
-		Render(controlsText)
-
-	// Layout
-	content := lipgloss.JoinVertical(
-		lipgloss.Center,
-		"",
-		phaseDisplay,
-		"",
-		timeText,
-		"",
-		controls,
-	)
-
-	// Center the content
-	return lipgloss.Place(
-		m.width, m.height,
-		lipgloss.Center, lipgloss.Center,
-		lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("7")).
-			Padding(1, 2).
-			Render(content),
-	)
+	return m.renderMainTimer()
 }
 
 func (m *Model) tickCmd() tea.Cmd {
@@ -226,24 +153,24 @@ func (m *Model) onPhaseEnd(phase timer.Phase) {
 	}
 }
 
-func (m *Model) toggleEditMode() {
-	if m.editMode {
-		m.exitEditMode()
-	} else {
-		m.enterEditMode()
+func (m *Model) toggleHelpMode() {
+	if !m.helpMode {
+		m.helpMode = true
+	} else if m.helpMode {
+		m.helpMode = false
 	}
 }
 
-func (m *Model) enterEditMode() {
-	m.editMode = true
-	m.editPhase = m.timer.Phase
-	m.editDigitPos = 0
-	m.blinkState = true
-	m.lastBlink = time.Now()
-}
-
-func (m *Model) exitEditMode() {
-	m.editMode = false
+func (m *Model) toggleEditMode() {
+	if !m.editMode {
+		m.editMode = true
+		m.editPhase = m.timer.Phase
+		m.editDigitPos = 0
+		m.blinkState = true
+		m.lastBlink = time.Now()
+	} else if m.editMode {
+		m.editMode = false
+	}
 }
 
 func (m *Model) nextEditPhase() {
@@ -346,4 +273,133 @@ func (m *Model) getPhaseString(phase timer.Phase) string {
 	default:
 		return "Work"
 	}
+}
+
+func (m *Model) renderHelpScreen() string {
+	helpContent := `Focus - Pomodoro Timer
+
+CONTROLS:
+Space    Start/pause timer
+R        Reset current session  
+E        Toggle edit mode 
+?        Toggle help
+Q        Quit
+ESC      Exit from any mode
+
+EDIT MODE:
+Tab      Switch phase (Work/Break/Long)
+H/L      Select digit (tens/units)
+J/K      Adjust time decrease/increase
+`
+
+	help := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("7")).
+		Align(lipgloss.Left).
+		Render(helpContent)
+
+	return lipgloss.Place(
+		m.width, m.height,
+		lipgloss.Center, lipgloss.Center,
+		lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("4")).
+			Padding(1, 2).
+			Render(help),
+	)
+}
+
+func (m *Model) renderEditMode() string {
+	phaseColor := lipgloss.Color("2")
+	phaseText := fmt.Sprintf("EDIT: %s Duration", m.getPhaseString(m.editPhase))
+
+	phaseDisplay := lipgloss.NewStyle().
+		Foreground(phaseColor).
+		Render(phaseText)
+
+	// Time display (ASCII art) - show edit time
+	minutes := m.timer.GetDurationForPhase(m.editPhase)
+	timeStr := m.formatEditTime(minutes)
+	asciiTime := ascii.ToASCII(timeStr)
+
+	timeText := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("7")).
+		Align(lipgloss.Center).
+		Padding(1, 2).
+		Render(asciiTime)
+
+	// Layout
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		"",
+		phaseDisplay,
+		"",
+		timeText,
+	)
+
+	// Center the content
+	return lipgloss.Place(
+		m.width, m.height,
+		lipgloss.Center, lipgloss.Center,
+		lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("2")).
+			Padding(1, 2).
+			Render(content),
+	)
+}
+
+func (m *Model) renderMainTimer() string {
+	// Phase info
+	var phaseColor lipgloss.Color
+	var phaseText string
+	if m.timer.Phase == timer.Work {
+		phaseColor = lipgloss.Color("4")
+		phaseText = fmt.Sprintf("Work (%d/4)", m.timer.SessionCount)
+	} else {
+		phaseColor = lipgloss.Color("3")
+		phaseText = "Break"
+	}
+
+	phaseDisplay := lipgloss.NewStyle().
+		Foreground(phaseColor).
+		Render(phaseText)
+
+	// Time display (ASCII art)
+	timeStr := m.timer.FormatTime()
+	asciiTime := ascii.ToASCII(timeStr)
+
+	// Timer color based on status
+	timerColor := lipgloss.Color("7") // white
+	switch m.timer.Status {
+	case timer.Running:
+		timerColor = lipgloss.Color("7") // white
+	case timer.Stopped:
+		timerColor = lipgloss.Color("8") // Gray
+	}
+
+	timeText := lipgloss.NewStyle().
+		Foreground(timerColor).
+		Align(lipgloss.Center).
+		Padding(1, 2).
+		Render(asciiTime)
+
+	// Layout
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		"",
+		phaseDisplay,
+		"",
+		timeText,
+	)
+
+	// Center the content
+	return lipgloss.Place(
+		m.width, m.height,
+		lipgloss.Center, lipgloss.Center,
+		lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("7")).
+			Padding(1, 2).
+			Render(content),
+	)
 }
