@@ -4,8 +4,7 @@ help: ## show help message
 
 .PHONY: build
 build: ## builds the app
-	@VERSION=$$(git describe --tags --always 2>/dev/null || echo "dev"); \
-	go build -ldflags="-X 'main.version=$$VERSION'" -o out/focus ./cmd/focus
+	go build  -o out/focus ./cmd/focus
 
 .PHONY: run
 run: build ## runs the app

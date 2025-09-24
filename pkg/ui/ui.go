@@ -265,31 +265,31 @@ func (m *Model) formatEditTime(minutes int) string {
 func (m *Model) getPhaseString(phase timer.Phase) string {
 	switch phase {
 	case timer.Work:
-		return "Work"
+		return "work"
 	case timer.ShortBreak:
-		return "Break"
+		return "break"
 	case timer.LongBreak:
-		return "Long Break"
+		return "long break"
 	default:
-		return "Work"
+		return "work"
 	}
 }
 
 func (m *Model) renderHelpScreen() string {
-	helpContent := `Focus - A minimalist pomodoro timer
+	helpContent := `focus - A minimalist pomodoro timer
 
-CONTROLS:
-?               toggle help
-Space           start/stop timer
-R               reset current session  
-E               toggle edit mode 
-Q               quit
-ESC             exit from any mode
+Controls:
+  ?               toggle help
+  Space           start/stop timer
+  R               reset current session  
+  E               toggle edit mode 
+  Esc             exit from any mode
+  Q               quit
 
-EDIT MODE:
-Tab             switch phase (Work/Break/Long Break)
-H/L or ←/→      select digit (tens/units)
-J/K or ↓/↑      adjust time decrease/increase
+Edit mode:
+  Tab             switch phase (Work/Break/Long Break)
+  H/L or ←/→      select digit (tens/units)
+  J/K or ↓/↑      adjust time decrease/increase
 `
 
 	help := lipgloss.NewStyle().
