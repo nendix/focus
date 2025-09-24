@@ -2,7 +2,11 @@ package timer
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Phase int
@@ -36,6 +40,27 @@ type Timer struct {
 }
 
 func New() *Timer {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// Check for development mode
+	if os.Getenv("ENV") == "dev" {
+		return &Timer{
+			Phase:              Work,
+			Remaining:          3 * time.Second,
+			WorkDuration:       3 * time.Second,
+			ShortBreakDuration: 3 * time.Second,
+			LongBreakDuration:  3 * time.Second,
+			Status:             Running,
+			SessionCount:       1,
+			MaxSessions:        4,
+			done:               make(chan bool),
+		}
+	}
+
+	// Default production durations
 	return &Timer{
 		Phase:              Work,
 		Remaining:          25 * time.Minute,
