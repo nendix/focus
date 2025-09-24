@@ -1,6 +1,6 @@
 # Focus
 
-Strongly vibe-coded-minimalist TUI for the Pomodoro timer technique built with Go and Bubble Tea.
+Strongly vibe-coded minimal TUI for the Pomodoro timer technique built with Go and Bubble Tea.
 
 ## Features
 
