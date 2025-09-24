@@ -10,9 +10,7 @@ import (
 	"github.com/nendix/focus/pkg/ui"
 )
 
-var (
-	version = "dev"
-)
+var version = "dev"
 
 // getVersion returns the version string, preferring build-time ldflags
 // but falling back to runtime/debug.BuildInfo for go install
@@ -42,17 +40,15 @@ func main() {
 			fmt.Println("Focus - A minimalist pomodoro timer")
 			fmt.Println("\nUsage: focus [command]")
 			fmt.Println("\nCommands:")
-			fmt.Println("  -v, --version    Show version information")
-			fmt.Println("  -h, --help         Show this help message")
+			fmt.Println("  -v, --version    	show version information")
+			fmt.Println("  -h, --help         show this help message")
 			fmt.Println("\nControls:")
-			fmt.Println("  Space    Start/pause timer")
-			fmt.Println("  R        Reset current session")
-			fmt.Println("  Q        Quit")
-			fmt.Println("  M        Edit mode (modify durations)")
-			fmt.Println("  Tab      Cycle edit phases (in edit mode)")
-			fmt.Println("  ←/→, H/L Select digit (in edit mode)")
-			fmt.Println("  ↑/↓, J/K Adjust time (in edit mode)")
-			fmt.Println("  Esc      Exit edit mode")
+			fmt.Println("  ?        toggle help")
+			fmt.Println("  Space    start/stop timer")
+			fmt.Println("  R        restart timer")
+			fmt.Println("  Q        quit")
+			fmt.Println("  E        toggle edit mode")
+			fmt.Println("  Esc      exit from any mode")
 			return
 		default:
 			fmt.Printf("Unknown command: %s\n", os.Args[1])

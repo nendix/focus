@@ -276,20 +276,20 @@ func (m *Model) getPhaseString(phase timer.Phase) string {
 }
 
 func (m *Model) renderHelpScreen() string {
-	helpContent := `Focus - Pomodoro Timer
+	helpContent := `Focus - A minimalist pomodoro timer
 
 CONTROLS:
-Space    Start/pause timer
-R        Reset current session  
-E        Toggle edit mode 
-?        Toggle help
-Q        Quit
-ESC      Exit from any mode
+?               toggle help
+Space           start/stop timer
+R               reset current session  
+E               toggle edit mode 
+Q               quit
+ESC             exit from any mode
 
 EDIT MODE:
-Tab      Switch phase (Work/Break/Long Break)
-H/L      Select digit (tens/units)
-J/K      Adjust time decrease/increase
+Tab             switch phase (Work/Break/Long Break)
+H/L or ←/→      select digit (tens/units)
+J/K or ↓/↑      adjust time decrease/increase
 `
 
 	help := lipgloss.NewStyle().
