@@ -357,7 +357,7 @@ func (m *Model) renderMainTimer() string {
 	if m.timer.Status == timer.Stopped {
 		phaseColor = lipgloss.Color("8") // gray
 		if m.timer.Phase == timer.Work {
-			phaseText = fmt.Sprintf("Work (%d/4)", m.timer.SessionCount)
+			phaseText = fmt.Sprintf("%s (%d/4)", m.getPhaseString(m.timer.Phase), m.timer.SessionCount)
 		} else {
 			phaseText = m.getPhaseString(m.timer.Phase)
 		}
@@ -365,7 +365,7 @@ func (m *Model) renderMainTimer() string {
 		// Normal colors when running
 		if m.timer.Phase == timer.Work {
 			phaseColor = lipgloss.Color("4")
-			phaseText = fmt.Sprintf("Work (%d/4)", m.timer.SessionCount)
+			phaseText = fmt.Sprintf("%s (%d/4)", m.getPhaseString(m.timer.Phase), m.timer.SessionCount)
 		} else {
 			phaseColor = lipgloss.Color("3")
 			phaseText = m.getPhaseString(m.timer.Phase)
