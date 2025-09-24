@@ -40,7 +40,7 @@ func main() {
 			fmt.Println("Focus - A minimalist pomodoro timer")
 			fmt.Println("\nUsage: focus [command]")
 			fmt.Println("\nCommands:")
-			fmt.Println("  -v, --version    	show version information")
+			fmt.Println("  -v, --version      show version information")
 			fmt.Println("  -h, --help         show this help message")
 			fmt.Println("\nControls:")
 			fmt.Println("  ?        toggle help")
