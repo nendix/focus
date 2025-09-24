@@ -2,6 +2,9 @@ module github.com/nendix/focus
 
 go 1.25.1
 
+// Retract v1.0.0 - accidentally published version that was later removed
+retract v1.0.0
+
 require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
