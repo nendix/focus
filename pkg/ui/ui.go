@@ -15,16 +15,15 @@ import (
 )
 
 type Model struct {
-	timer        *timer.Timer
-	notifier     *notification.Notifier
-	width        int
-	height       int
-	editMode     bool
-	helpMode     bool
-	editPhase    timer.Phase
-	editDigitPos int
-	blinkState   bool
-	lastBlink    time.Time
+	timer      *timer.Timer
+	notifier   *notification.Notifier
+	width      int
+	height     int
+	editMode   bool
+	helpMode   bool
+	editPhase  timer.Phase
+	blinkState bool
+	lastBlink  time.Time
 }
 
 type tickMsg struct{}
@@ -37,14 +36,13 @@ func NewModel() *Model {
 	notifier := notification.New()
 
 	m := &Model{
-		timer:        t,
-		notifier:     notifier,
-		editMode:     false,
-		helpMode:     false,
-		editPhase:    timer.Work,
-		editDigitPos: 0,
-		blinkState:   true,
-		lastBlink:    time.Now(),
+		timer:      t,
+		notifier:   notifier,
+		editMode:   false,
+		helpMode:   false,
+		editPhase:  timer.Work,
+		blinkState: true,
+		lastBlink:  time.Now(),
 	}
 
 	// Set up phase end callback
@@ -97,14 +95,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "tab":
 			if m.editMode {
 				m.nextEditPhase()
-			}
-		case "h", "left":
-			if m.editMode {
-				m.editDigitPos = 0 // tens digit
-			}
-		case "l", "right":
-			if m.editMode {
-				m.editDigitPos = 1 // units digit
 			}
 		case "j", "down":
 			if m.editMode {
@@ -165,7 +155,6 @@ func (m *Model) toggleEditMode() {
 	if !m.editMode {
 		m.editMode = true
 		m.editPhase = m.timer.Phase
-		m.editDigitPos = 0
 		m.blinkState = true
 		m.lastBlink = time.Now()
 	} else if m.editMode {
@@ -182,12 +171,11 @@ func (m *Model) nextEditPhase() {
 	case timer.LongBreak:
 		m.editPhase = timer.Work
 	}
-	m.editDigitPos = 0
 }
 
 func (m *Model) incrementDigit() {
 	currentMinutes := m.timer.GetDurationForPhase(m.editPhase)
-	newMinutes := m.adjustDigit(currentMinutes, 1)
+	newMinutes := m.adjustDigit(currentMinutes, 5)
 	if newMinutes >= 1 && newMinutes <= 60 {
 		m.timer.SetDurationForPhase(m.editPhase, newMinutes)
 	}
@@ -195,51 +183,28 @@ func (m *Model) incrementDigit() {
 
 func (m *Model) decrementDigit() {
 	currentMinutes := m.timer.GetDurationForPhase(m.editPhase)
-	newMinutes := m.adjustDigit(currentMinutes, -1)
+	newMinutes := m.adjustDigit(currentMinutes, -5)
 	if newMinutes >= 1 && newMinutes <= 60 {
 		m.timer.SetDurationForPhase(m.editPhase, newMinutes)
 	}
 }
 
 func (m *Model) adjustDigit(minutes, delta int) int {
-	tens := minutes / 10
-	units := minutes % 10
+	// Simple ±5 minute adjustment
+	newValue := minutes + delta
 
-	if m.editDigitPos == 0 { // tens digit
-		newTens := tens + delta
-		if newTens < 0 {
-			newTens = 6 // wrap to 60
-			units = 0   // force units to 0 for 60
-		} else if newTens > 6 {
-			newTens = 0 // wrap to 0x
-		} else if newTens == 6 {
-			units = 0 // force units to 0 when tens = 6 (only 60 allowed)
-		}
-		return newTens*10 + units
-	} else { // units digit
-		newUnits := units + delta
-		if tens == 6 {
-			// Special case: when tens=6, units must stay 0 (only 60 allowed)
-			return 60
-		} else if newUnits < 0 {
-			if tens == 0 {
-				// At 0x, wrap to 60
-				return 60
-			} else {
-				// Normal wrap to 9
-				newUnits = 9
-			}
-		} else if newUnits > 9 {
-			if tens == 5 && newUnits == 10 {
-				// 59 -> 60 (special case)
-				return 60
-			} else {
-				// Normal wrap to 0
-				newUnits = 0
-			}
-		}
-		return tens*10 + newUnits
+	// Handle wraparound for 1-60 range
+	if newValue < 1 {
+		// Wrap from bottom: calculate how far below 1, then wrap from 60
+		underflow := 1 - newValue
+		return 60 - (underflow - 1)
+	} else if newValue > 60 {
+		// Wrap from top: calculate how far above 60, then wrap from 1
+		overflow := newValue - 60
+		return overflow
 	}
+
+	return newValue
 }
 
 func (m *Model) formatEditTime(minutes int) string {
@@ -247,19 +212,14 @@ func (m *Model) formatEditTime(minutes int) string {
 	units := minutes % 10
 
 	// Create the time string with potential blinking
-	tensStr := fmt.Sprintf("%d", tens)
-	unitsStr := fmt.Sprintf("%d", units)
+	timeStr := fmt.Sprintf("%d%d:00", tens, units)
 
-	// Make selected digit blink (replace with space to maintain width)
+	// Make entire time blink (replace with spaces to maintain width)
 	if !m.blinkState {
-		if m.editDigitPos == 0 {
-			tensStr = " " // Use space to maintain character width
-		} else {
-			unitsStr = " " // Use space to maintain character width
-		}
+		timeStr = " " // 5 spaces to match "XX:00" width
 	}
 
-	return fmt.Sprintf("%s%s:00", tensStr, unitsStr)
+	return timeStr
 }
 
 func (m *Model) getPhaseString(phase timer.Phase) string {
@@ -288,8 +248,7 @@ Controls:
 
 Edit mode:
   Tab             switch phase (Work/Break/Long Break)
-  H/L or ←/→      select digit (tens/units)
-  J/K or ↓/↑      adjust time decrease/increase
+  J/K or ↓/↑      adjust time ±5 minutes
 `
 
 	help := lipgloss.NewStyle().
@@ -310,7 +269,7 @@ Edit mode:
 
 func (m *Model) renderEditMode() string {
 	phaseColor := lipgloss.Color("2")
-	phaseText := fmt.Sprintf("EDIT: %s Duration", m.getPhaseString(m.editPhase))
+	phaseText := fmt.Sprintf("edit: %s duration", m.getPhaseString(m.editPhase))
 
 	phaseDisplay := lipgloss.NewStyle().
 		Foreground(phaseColor).

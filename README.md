@@ -5,7 +5,7 @@ Strongly vibe-coded minimal TUI for the Pomodoro timer technique built with Go a
 ## Features
 
 - **Pomodoro Technique**: 25-minute work sessions, 5-minute short breaks, 15-minute long breaks
-- **Customizable Durations**: Edit work and break durations with vim-like controls (1-60 minutes)
+- **Customizable Durations**: Edit work and break durations (1-60 minutes) with ±5 minute adjustments
 - **Audio Notifications**: Different sounds for work phase ending and break phase ending
 - **Simple Controls**: Keyboard commands for all operations
 - **Clean TUI**: Minimal terminal interface with colors and styling
@@ -18,16 +18,16 @@ go install github.com/nendix/focus/cmd/focus@latest
 ## Controls
 
 #### Normal Mode
+- **?**: Toggle help screen
 - **Space**: Start/Pause timer
 - **R**: Reset current phase
-- **M**: Enter duration edit mode
+- **E**: Toggle duration edit mode
 - **Q**: Quit application
 
 #### Edit Mode
-- **Tab**: Switch between phases (Work → Short Break → Long Break)
-- **H/L** or **←/→**: Select digit position (tens/units)
-- **J/K** or **↑/↓**: Increment/decrement selected digit
-- **M/Esc**: Exit edit mode
+- **Tab**: Switch between phases (Work → Short Break → Long Break)  
+- **J/K** or **↑/↓**: Adjust time ±5 minutes
+- **Esc**: Exit edit mode
 
 ## Default Timer Durations
 
