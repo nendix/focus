@@ -37,20 +37,15 @@ type Timer struct {
 
 func New() *Timer {
 	return &Timer{
-		Phase: Work,
-		// Remaining:          25 * time.Minute,
-		// WorkDuration:       25 * time.Minute,
-		// ShortBreakDuration: 5 * time.Minute,
-		// LongBreakDuration:  15 * time.Minute,
-		Status:       Running,
-		SessionCount: 1,
-		MaxSessions:  4,
-		done:         make(chan bool),
-		// for testing
-		Remaining:          3 * time.Second,
-		WorkDuration:       3 * time.Second,
-		ShortBreakDuration: 3 * time.Second,
-		LongBreakDuration:  5 * time.Second,
+		Phase:              Work,
+		Remaining:          25 * time.Minute,
+		WorkDuration:       25 * time.Minute,
+		ShortBreakDuration: 5 * time.Minute,
+		LongBreakDuration:  15 * time.Minute,
+		Status:             Running,
+		SessionCount:       1,
+		MaxSessions:        4,
+		done:               make(chan bool),
 	}
 }
 
