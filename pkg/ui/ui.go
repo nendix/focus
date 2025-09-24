@@ -287,7 +287,7 @@ Q        Quit
 ESC      Exit from any mode
 
 EDIT MODE:
-Tab      Switch phase (Work/Break/Long)
+Tab      Switch phase (Work/Break/Long Break)
 H/L      Select digit (tens/units)
 J/K      Adjust time decrease/increase
 `
@@ -352,12 +352,24 @@ func (m *Model) renderMainTimer() string {
 	// Phase info
 	var phaseColor lipgloss.Color
 	var phaseText string
-	if m.timer.Phase == timer.Work {
-		phaseColor = lipgloss.Color("4")
-		phaseText = fmt.Sprintf("Work (%d/4)", m.timer.SessionCount)
+
+	// Check if timer is paused - use gray colors
+	if m.timer.Status == timer.Stopped {
+		phaseColor = lipgloss.Color("8") // gray
+		if m.timer.Phase == timer.Work {
+			phaseText = fmt.Sprintf("Work (%d/4)", m.timer.SessionCount)
+		} else {
+			phaseText = m.getPhaseString(m.timer.Phase)
+		}
 	} else {
-		phaseColor = lipgloss.Color("3")
-		phaseText = "Break"
+		// Normal colors when running
+		if m.timer.Phase == timer.Work {
+			phaseColor = lipgloss.Color("4")
+			phaseText = fmt.Sprintf("Work (%d/4)", m.timer.SessionCount)
+		} else {
+			phaseColor = lipgloss.Color("3")
+			phaseText = m.getPhaseString(m.timer.Phase)
+		}
 	}
 
 	phaseDisplay := lipgloss.NewStyle().
@@ -393,12 +405,18 @@ func (m *Model) renderMainTimer() string {
 	)
 
 	// Center the content
+	// Border color - gray when paused, normal when running
+	borderColor := lipgloss.Color("7") // default white
+	if m.timer.Status == timer.Stopped {
+		borderColor = lipgloss.Color("8") // gray when paused
+	}
+
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
 		lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("7")).
+			BorderForeground(borderColor).
 			Padding(1, 2).
 			Render(content),
 	)
