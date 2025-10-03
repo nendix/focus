@@ -27,3 +27,7 @@ release:  ## creates a release on github (e.g. make release name=v1.3.7)
 .PHONY: test
 test: ## runs the tests
 	go test ./...
+
+.PHONY: dev
+dev: build ## runs the app in development mode with faster timers
+	ENV=dev ./out/focus
